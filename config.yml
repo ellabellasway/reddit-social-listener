@@ -1,0 +1,167 @@
+# Reddit Social Listener config
+#
+# This file is the whole personality of your listener: who it's listening
+# for, what counts as a relevant thread, and how it should talk when it
+# drafts a reply. Copy this file, then replace every placeholder below with
+# your own product/brand details before running the listener for real.
+
+# --- Persona -----------------------------------------------------------
+# Used by src/drafter.py to build the Claude system prompt. This is the
+# "who is posting this reply" identity - swap it for yourself, your founder,
+# or a team persona.
+persona:
+  name: "Alex"
+  title: "founder"
+  company: "YourProduct"
+  company_url: "https://yourproduct.example.com"
+  # Background context the drafter can draw on. Keep this factual and short -
+  # the model uses it as grounding, it does not fact-check it against anything.
+  blurb: |
+    A brief, honest description of your company: what it does, how old it is,
+    what makes it different. Two to four sentences.
+  # Products/companies in the same space. Used only as background context for
+  # the drafter so it can talk knowledgeably about alternatives if asked.
+  competitors:
+    - "Competitor One"
+    - "Competitor Two"
+
+# Subs to sweep. Start narrow (subs where your actual users hang out) and
+# widen once you see what kind of threads surface.
+subs:
+  - webscraping
+  - automation
+  - selfhosted
+  - webdevelopment
+  - SaaS
+
+# How far back to consider posts (in days)
+window_days: 14
+
+# Reddit endpoints to sweep per sub
+endpoints:
+  - new
+  - hot
+
+# Per-endpoint limit
+limit: 25
+
+# Minimum score (0-100 scale) for a post to surface.
+# Buckets: 80-100 drop-everything, 40-79 strong, 30-39 solid, <30 marginal.
+# Raise to be stricter, lower to see more.
+min_score: 30
+
+# Threads scoring this high also fire a Slack alert (one message per thread).
+# Everything min_score+ still lands in the sheet; only alert_threshold+ pings.
+# Needs SLACK_WEBHOOK_URL set; no-op otherwise.
+alert_threshold: 70
+
+# Master triage sheet, linked in Slack alerts so the team can mark threads done.
+# Fill this in after you create the sheet (see DEPLOY.md step 1).
+sheet_url: ""
+
+# Drop posts with these traits
+skip_if:
+  stickied: true
+  promoted: true
+  over_18: true
+
+# OP account heuristics. Drop or flag accounts that look like throwaways.
+op_filters:
+  min_account_age_days: 30
+  min_karma: 100
+
+# --- Scoring vocabulary --------------------------------------------------
+# These four lists are example vocabulary for a browser-automation /
+# web-scraping product, since that's what this template was built against.
+# Replace them with the buyer-intent language for YOUR product - think about
+# how your actual customers phrase the problem you solve, before they know
+# your product exists.
+
+# Strong keywords: high buyer intent, weight x3. If a post hits one of these,
+# it's also eligible for "Mention Product? = Yes" (see decide_mention_product
+# in src/scorer.py).
+strong_keywords:
+  - headless browser
+  - browser automation
+  - anti-bot
+  - captcha
+  - cloudflare
+  - scraping api
+  - browser pool
+  - proxy rotation
+  - residential proxy
+  - fingerprint
+
+# Medium keywords: on-topic but lower intent, weight x1.
+medium_keywords:
+  - scrape
+  - scraping
+  - scraper
+  - automation
+  - selenium
+  - crawler
+  - data extraction
+  - docker
+  - chromium
+
+# Pain words: signals someone is stuck or evaluating options, weight x2.
+pain_keywords:
+  - struggling
+  - best tool
+  - recommend
+  - alternative to
+  - stack for
+  - infrastructure
+  - production
+  - at scale
+  - blocked
+  - detected
+  - banned
+  - timeout
+  - crash
+  - how do i
+  - "can't"
+  - why is
+
+# Medium-keyword hits that only warrant a soft, credibility-only mention
+# (no product URL) rather than a direct plug. See decide_mention_product()
+# in src/scorer.py.
+soft_mention_keywords:
+  - selenium
+  - automation
+  - scraping
+
+# Technical-term vocabulary (drives the Difficulty classifier: Easy / Medium
+# / Technical). Replace with the jargon that signals "this poster already
+# knows what they're doing" in your domain.
+technical_terms:
+  - ja3
+  - ja4
+  - tls fingerprint
+  - http/2 frame
+  - webgl renderer
+  - canvas fingerprint
+  - navigator.webdriver
+  - cdp
+  - chrome devtools protocol
+  - xvfb
+  - oom
+  - stack trace
+  - exception
+  - segfault
+  - kernel
+  - syscall
+
+# --- Voice rules ---------------------------------------------------------
+# Applied in the Claude drafter system prompt (src/drafter.py). Edit freely -
+# these are just a reasonable starting point for "sounds like a person, not
+# an AI-generated Reddit comment."
+voice_rules:
+  - First person, conversational
+  - No em dashes, en dashes, or arrows
+  - No "it's not X, it's Y" pattern - a lot of Reddit calls this out as AI slop
+  - No filler vocabulary (leverage, seamless, robust, delve, cutting-edge)
+  - No rule-of-three filler lists
+  - Mention your product only when it's literally the product being discussed
+  - Two to four paragraphs separated by blank lines
+  - Acknowledge thread context (top comments) where relevant

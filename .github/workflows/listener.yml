@@ -1,0 +1,82 @@
+name: Reddit Listener
+
+on:
+  schedule:
+    # Hourly, on the hour. GitHub cron is UTC.
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    # Manual trigger for testing
+    inputs:
+      dry_run:
+        description: 'Dry run (no sheet write)'
+        required: false
+        default: 'false'
+      limit:
+        description: 'Max rows to surface'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Restore listener state cache (seen-list + profile cache)
+        uses: actions/cache@v4
+        with:
+          path: |
+            listener.db
+            .docs_urls_cache.json
+          # Rolling key: each run writes a UNIQUE immutable cache and restores
+          # the most recent prior one via the restore-keys prefix. A static key
+          # would freeze the seen-list at the first run (caches are immutable),
+          # making every later run re-surface the same threads as "new".
+          # Bump the v2 suffix to force a full reset (e.g. after schema changes).
+          key: listener-state-v2-${{ github.run_id }}
+          restore-keys: |
+            listener-state-v2-
+
+      - name: Run listener
+        env:
+          BROWSERLESS_API_KEY: ${{ secrets.BROWSERLESS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SHEET_WRITER_URL: ${{ secrets.SHEET_WRITER_URL }}
+          SHEET_WRITER_TOKEN: ${{ secrets.SHEET_WRITER_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Reddit rate-limits GitHub Actions IPs on the anonymous JSON
+          # endpoint. Route Reddit fetches through Browserless's residential
+          # routing on the cron runner. Locally, leave unset to use direct urllib.
+          USE_BROWSERLESS_FETCH: "1"
+          # Pass workflow_dispatch inputs via env vars (safer than inlining
+          # ${{ }} expressions inside run: shell commands)
+          INPUT_DRY_RUN: ${{ github.event.inputs.dry_run }}
+          INPUT_LIMIT: ${{ github.event.inputs.limit }}
+        run: |
+          set -e
+          ARGS=""
+          if [[ "$INPUT_DRY_RUN" == "true" ]]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          # Validate limit is purely numeric before passing it through
+          if [[ -n "$INPUT_LIMIT" ]] && [[ "$INPUT_LIMIT" =~ ^[0-9]+$ ]]; then
+            ARGS="$ARGS --limit $INPUT_LIMIT"
+          fi
+          python listener.py $ARGS
+
+      # No explicit save step needed: actions/cache@v4 (restore step above)
+      # auto-saves listener.db + .docs_urls_cache.json at post-job under the
+      # rolling key listener-state-v2-<run_id>, which the next run restores
+      # via the restore-keys prefix.

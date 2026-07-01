@@ -1,0 +1,5 @@
+requests>=2.31
+anthropic>=0.40
+python-dotenv>=1.0
+pyyaml>=6.0
+playwright>=1.40    # Used by src/reddit_client.py + src/browserless_client.py when routing through Browserless (USE_BROWSERLESS_FETCH=1)
