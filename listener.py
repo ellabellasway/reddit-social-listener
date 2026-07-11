@@ -177,7 +177,7 @@ def _main_inner(cfg: dict):
         notes = ""
         if not args.no_draft:
             try:
-                draft_text = draft_reply(scored, cfg.get("persona", {}))
+                draft_text = draft_reply(scored, cfg.get("persona", {}), cfg.get("voice_rules"))
                 if not draft_text:
                     notes = "Drafter returned empty (likely SKIP). Surfacing for human review."
             except Exception as e:

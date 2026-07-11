@@ -13,12 +13,31 @@ except ImportError:
     Anthropic = None  # type: ignore
 
 
-def build_system_prompt(persona: dict) -> str:
-    """Build the Claude system prompt from config.yml's persona block.
+# Fallback voice rules, used only when config.yml has no `voice_rules:` block.
+# Prefer editing config.yml over this list - that's the customization surface.
+DEFAULT_VOICE_RULES = [
+    "First person, conversational",
+    "Lead with the answer, no preamble",
+    "2-4 paragraphs, each separated by a blank line (Reddit needs this for paragraph breaks)",
+    "No em dashes, en dashes, or arrows. Use hyphens, commas, periods",
+    'No "it\'s not X, it\'s Y" or "isn\'t just X, it\'s Y" patterns (the room calls these AI tells)',
+    "No filler vocabulary: leverage, seamless, robust, delve, cutting-edge, navigate, unlock, revolutionize, in today's fast-paced world",
+    "No rule-of-three filler lists",
+    "No bold or heavy formatting",
+    "No bullet points unless the answer is naturally list-shaped (rare)",
+    'Reference specific comments in the thread by username when it\'s useful (e.g. "RandomPantsAppear pointed at this already")',
+    "Use specific numbers, version pins, product names when you have them",
+]
+
+
+def build_system_prompt(persona: dict, voice_rules: Optional[list] = None) -> str:
+    """Build the Claude system prompt from config.yml's persona + voice_rules.
 
     Keeping this as a function (not a module-level constant) means the whole
-    voice/identity is configurable per-deployment - swap config.yml and you
-    get a different person, company, and mention policy without touching code.
+    voice/identity is configurable per-deployment - edit config.yml and you
+    get a different person, company, voice, and mention policy without touching
+    code. `voice_rules` comes straight from config.yml; DEFAULT_VOICE_RULES is
+    only a fallback for configs that omit the block.
     """
     name = persona.get("name", "the poster")
     title = persona.get("title", "")
@@ -28,21 +47,13 @@ def build_system_prompt(persona: dict) -> str:
     competitors = persona.get("competitors", [])
 
     role = f"{name}, {title} of {company}" if title else name
+    rules = voice_rules if voice_rules else DEFAULT_VOICE_RULES
+    rules_block = "\n".join(f"- {rule}" for rule in rules)
 
     return f"""You are drafting a Reddit reply on behalf of {role}. You will paste this directly into Reddit, so write what the person should literally post.
 
 Voice rules - follow strictly:
-- First person, conversational
-- Lead with the answer, no preamble
-- 2-4 paragraphs, each separated by a blank line (Reddit needs this for paragraph breaks)
-- No em dashes, en dashes, or arrows. Use hyphens, commas, periods
-- No "it's not X, it's Y" or "isn't just X, it's Y" patterns (the room calls these AI tells)
-- No filler vocabulary: leverage, seamless, robust, delve, cutting-edge, navigate, unlock, revolutionize, in today's fast-paced world
-- No rule-of-three filler lists
-- No bold or heavy formatting
-- No bullet points unless the answer is naturally list-shaped (rare)
-- Reference specific comments in the thread by username when it's useful (e.g. "RandomPantsAppear pointed at this already")
-- Use specific numbers, version pins, product names when you have them
+{rules_block}
 
 About {company} (background context only):
 {blurb}
@@ -118,7 +129,7 @@ def _docs_query_from_post(scored: ScoredPost) -> str:
     return " ".join(title.split()[:5])
 
 
-def draft_reply(scored: ScoredPost, persona: dict, model: str = "claude-opus-4-7") -> str:
+def draft_reply(scored: ScoredPost, persona: dict, voice_rules: Optional[list] = None, model: str = "claude-opus-4-7") -> str:
     """Generate a draft reply using Claude.
 
     For Technical-difficulty posts, retrieves docs context first (if a docs
@@ -152,7 +163,7 @@ def draft_reply(scored: ScoredPost, persona: dict, model: str = "claude-opus-4-7
     response = client.messages.create(
         model=model,
         max_tokens=1500,
-        system=build_system_prompt(persona),
+        system=build_system_prompt(persona, voice_rules),
         messages=[{"role": "user", "content": user_msg}],
     )
     text = "".join(b.text for b in response.content if hasattr(b, "text")).strip()

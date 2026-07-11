@@ -153,15 +153,19 @@ technical_terms:
   - syscall
 
 # --- Voice rules ---------------------------------------------------------
-# Applied in the Claude drafter system prompt (src/drafter.py). Edit freely -
-# these are just a reasonable starting point for "sounds like a person, not
-# an AI-generated Reddit comment."
+# Read at runtime and injected verbatim into the Claude drafter system prompt
+# (src/drafter.py, build_system_prompt). This IS the voice-customization
+# surface: edit these lines and the drafts change, no code edit needed. Remove
+# the block entirely and the drafter falls back to DEFAULT_VOICE_RULES.
 voice_rules:
   - First person, conversational
-  - No em dashes, en dashes, or arrows
-  - No "it's not X, it's Y" pattern - a lot of Reddit calls this out as AI slop
-  - No filler vocabulary (leverage, seamless, robust, delve, cutting-edge)
+  - Lead with the answer, no preamble
+  - 2-4 paragraphs, each separated by a blank line (Reddit needs this for paragraph breaks)
+  - No em dashes, en dashes, or arrows. Use hyphens, commas, periods
+  - No "it's not X, it's Y" or "isn't just X, it's Y" patterns (the room calls these AI tells)
+  - "No filler vocabulary: leverage, seamless, robust, delve, cutting-edge, navigate, unlock, revolutionize, in today's fast-paced world"
   - No rule-of-three filler lists
-  - Mention your product only when it's literally the product being discussed
-  - Two to four paragraphs separated by blank lines
-  - Acknowledge thread context (top comments) where relevant
+  - No bold or heavy formatting
+  - No bullet points unless the answer is naturally list-shaped (rare)
+  - Reference specific comments in the thread by username when it's useful
+  - Use specific numbers, version pins, product names when you have them
