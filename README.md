@@ -1,5 +1,7 @@
 # Reddit Social Listener
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE) ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
+
 Surfaces relevant Reddit threads into a shared master Google Sheet where you
 (or your team) can pick up a thread and draft a reply. Runs on an hourly cron
 and optionally uses [Browserless](https://browserless.io) for reliable
@@ -106,3 +108,11 @@ None of this is required. Without `BROWSERLESS_API_KEY` set, OP filtering and do
 - [ ] Owner/team-member assignment automation (round-robin or fit-based)
 - [ ] Weekly digest mode (top N of the week, conversion rate from surfaced to posted)
 - [ ] Extend to HN + X + dev.to using the same pattern
+
+## Contributing
+
+Issues and pull requests welcome - see [CONTRIBUTING.md](CONTRIBUTING.md) for the short version of how.
+
+## License
+
+[MIT](LICENSE)
