@@ -13,6 +13,16 @@ browser-automation product; this repo is the genericized template version.
 Everything product-specific lives in `config.yml` - copy it, fill in your
 own persona and keywords, and it's yours.
 
+## What it looks like
+
+Threads land in a shared triage sheet, scored and pre-drafted:
+
+![Triage sheet](docs/triage-sheet.png)
+
+High scorers also ping Slack so nobody misses a hot thread:
+
+![Slack alert](docs/slack-alert.png)
+
 ## What it does
 
 Hourly cron job that:
@@ -27,6 +37,32 @@ Hourly cron job that:
 
 You (or your team) pick rows out of the sheet, edit the draft, post the
 reply, and fill in the Posted URL column.
+
+## The draft is a starting point, never the reply
+
+The Suggested draft column exists to kill the blank-page problem, not to
+be copy-pasted. My rule, and the one I'd suggest if you run this template:
+no draft goes out as-is. Ever.
+
+Before posting, every reply gets:
+
+- A rewritten intro. The model's opening line is always the weakest part
+  and the most recognizable as generated.
+- Something only I could add - a real project, a mistake I actually made,
+  a number from my own usage. If I can't add anything personal, I skip
+  the thread.
+- A pass in my own voice. If a sentence doesn't sound like something I'd
+  say out loud, it gets rewritten or cut.
+
+Two reasons. Reddit is very good at smelling generated text, and one
+called-out comment does more damage than fifty good ones do good. And
+the drafts are grounded in the thread but not in your actual experience -
+the model doesn't know what you shipped last week or which workaround
+you personally hit. That part is the whole value of replying at all.
+
+Treat the draft as a researcher handing you notes: it read the thread,
+checked the top comments, and sketched an angle. The take still has to
+be yours.
 
 ## Project structure
 
