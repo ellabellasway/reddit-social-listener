@@ -57,7 +57,8 @@ def _get_browserless_request():
         "proxySticky": "true",
         "timeout": 120000,
     })
-    unblock_url = f"https://production-sfo.browserless.io/chromium/unblock?{query_params}"
+    base = os.environ.get("BROWSERLESS_BASE_URL", "https://production-sfo.browserless.io").rstrip("/")
+    unblock_url = f"{base}/chromium/unblock?{query_params}"
     body = json.dumps({
         "url": "https://old.reddit.com/",
         "content": False,

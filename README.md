@@ -155,6 +155,7 @@ and `.env` (secrets). A normal deployment needs no code edits.
 | `SHEET_WRITER_URL` | Yes | Your Apps Script endpoint (deployed from `apps_script/SheetWriter.gs`) |
 | `SHEET_WRITER_TOKEN` | Yes | Shared secret between the listener and Apps Script |
 | `BROWSERLESS_API_KEY` | Optional | OP profile lookup, docs grounding, CI fetch routing. No-ops if unset |
+| `BROWSERLESS_BASE_URL` | Optional | Browserless host; defaults to the SFO region. Override for self-hosted or another region |
 | `SLACK_WEBHOOK_URL` | Optional | High-score thread alerts. No-ops if unset |
 | `DOCS_SITEMAP_URL` | Optional | Enables docs grounding for Technical threads |
 

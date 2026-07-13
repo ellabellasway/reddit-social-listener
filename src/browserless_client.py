@@ -30,7 +30,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-BQL_ENDPOINT = "https://production-sfo.browserless.io/chrome/bql"
+DEFAULT_BROWSERLESS_BASE_URL = "https://production-sfo.browserless.io"
+
+
+def _browserless_base_url() -> str:
+    """Browserless host, overridable with BROWSERLESS_BASE_URL (self-hosted or a
+    non-SFO region). Read at call time, not import time, so a value in .env
+    applies - load_dotenv() runs after these modules are imported."""
+    return os.environ.get("BROWSERLESS_BASE_URL", DEFAULT_BROWSERLESS_BASE_URL).rstrip("/")
+
+
 DOCS_SITEMAP = os.environ.get("DOCS_SITEMAP_URL", "")
 DOCS_CACHE_PATH = Path(__file__).parent.parent / ".docs_urls_cache.json"
 DOCS_CACHE_TTL_S = 24 * 3600
@@ -65,7 +74,7 @@ def _api_key() -> str:
 
 def _run_browserql(query: str, variables: Optional[dict] = None, timeout: int = 30) -> dict:
     payload = json.dumps({"query": query, "variables": variables or {}}).encode("utf-8")
-    url = f"{BQL_ENDPOINT}?token={urllib.parse.quote(_api_key())}"
+    url = f"{_browserless_base_url()}/chrome/bql?token={urllib.parse.quote(_api_key())}"
     req = urllib.request.Request(
         url,
         data=payload,

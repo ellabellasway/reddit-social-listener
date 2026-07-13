@@ -129,7 +129,7 @@ def _docs_query_from_post(scored: ScoredPost) -> str:
     return " ".join(title.split()[:5])
 
 
-def draft_reply(scored: ScoredPost, persona: dict, voice_rules: Optional[list] = None, model: str = "claude-opus-4-7") -> str:
+def draft_reply(scored: ScoredPost, persona: dict, voice_rules: Optional[list] = None, model: str = "claude-opus-4-8") -> str:
     """Generate a draft reply using Claude.
 
     For Technical-difficulty posts, retrieves docs context first (if a docs
